@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "代理设置扩展",
+  "version": "1.0",
+  "description": "自定义Chrome代理设置",
+  "permissions": [
+    "proxy",
+    "storage"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

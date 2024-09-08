@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>代理设置</title>
+  <style>
+    body {
+      width: 350px;
+      padding: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f0f0;
+      color: #333;
+    }
+    h3 {
+      margin-top: 0;
+      color: #2c3e50;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin: 10px 0;
+    }
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%;
+      padding: 5px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    input[type="checkbox"] {
+      margin-right: 5px;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin-top: 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+  </style>
+</head>
+<body>
+  <h3>代理设置</h3>
+  <label>
+    <input type="checkbox" id="enableProxy"> 启用代理
+  </label>
+  <br><br>
+  <label>代理类型:
+    <select id="proxyType">
+      <option value="http">HTTP</option>
+      <option value="socks5">SOCKS5</option>
+    </select>
+  </label>
+  <br><br>
+  <label>代理地址: <input type="text" id="proxyHost"></label>
+  <br>
+  <label>代理端口: <input type="number" id="proxyPort"></label>
+  <br><br>
+  <label>不使用代理的网址列表（每行一个）:
+    <textarea id="bypassList"></textarea>
+  </label>
+  <button id="saveButton">保存设置</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>
