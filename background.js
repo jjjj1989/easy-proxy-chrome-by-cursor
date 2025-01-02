@@ -10,29 +10,38 @@ function getStorageData() {
   });
 }
 
+function getProcessedSettings(items) {
+  return {
+    enableProxy: items.enableProxy === true,
+    proxyType: items.proxyType || 'http',
+    proxyHost: items.proxyHost || '',
+    proxyPort: items.proxyPort || '',
+    bypassList: items.bypassList || ''
+  };
+}
+
+function getBypassUrls(bypassList) {
+  if (typeof bypassList === 'string') {
+    return bypassList.split('\n').filter(url => url.trim() !== '');
+  }
+  console.warn('bypassList is not a string:', bypassList);
+  return [];
+}
+
 async function updateProxySettings() {
   try {
     const items = await getStorageData();
     console.log('Retrieved items:', JSON.stringify(items));
 
-    // 添加默认值
-    const enableProxy = items.enableProxy === true;
-    const proxyType = items.proxyType || 'http';
-    const proxyHost = items.proxyHost || '';
-    const proxyPort = items.proxyPort || '';
-    const bypassList = items.bypassList || '';
-
+    const { enableProxy, proxyType, proxyHost, proxyPort, bypassList } = getProcessedSettings(items);
     console.log('Processed settings:', JSON.stringify({ enableProxy, proxyType, proxyHost, proxyPort, bypassList }));
 
-    if (enableProxy) {
-      let bypassUrls = [];
-      if (typeof bypassList === 'string') {
-        bypassUrls = bypassList.split('\n').filter(url => url.trim() !== '');
-      } else {
-        console.warn('bypassList is not a string:', bypassList);
-      }
-      bypassUrls.push('<local>');
+    // 根据代理是否启用设置图标颜色
+    const iconPath = enableProxy ? 'icon-green.png' : 'icon-red.png';
+    chrome.action.setIcon({ path: iconPath });
 
+    if (enableProxy) {
+      const bypassUrls = [...getBypassUrls(bypassList), '<local>'];
       console.log('Bypass URLs:', JSON.stringify(bypassUrls));
 
       if (!proxyHost || !proxyPort) {
@@ -45,9 +54,9 @@ async function updateProxySettings() {
         pacScript: {
           data: `
             function FindProxyForURL(url, host) {
-              var bypassList = ${JSON.stringify(bypassUrls)};
-              for (var i = 0; i < bypassList.length; i++) {
-                if (shExpMatch(host, bypassList[i])) {
+              const bypassList = ${JSON.stringify(bypassUrls)};
+              for (const bypassUrl of bypassList) {
+                if (shExpMatch(host, bypassUrl)) {
                   return 'DIRECT';
                 }
               }
@@ -58,7 +67,7 @@ async function updateProxySettings() {
       };
 
       await new Promise((resolve, reject) => {
-        chrome.proxy.settings.set({value: config, scope: "regular"}, () => {
+        chrome.proxy.settings.set({ value: config, scope: "regular" }, () => {
           if (chrome.runtime.lastError) {
             reject(chrome.runtime.lastError);
           } else {
@@ -70,7 +79,7 @@ async function updateProxySettings() {
       console.log('代理设置已更新');
     } else {
       await new Promise((resolve, reject) => {
-        chrome.proxy.settings.clear({scope: "regular"}, () => {
+        chrome.proxy.settings.clear({ scope: "regular" }, () => {
           if (chrome.runtime.lastError) {
             reject(chrome.runtime.lastError);
           } else {
@@ -86,11 +95,12 @@ async function updateProxySettings() {
   }
 }
 
-// 监听来自popup.js的消息
+// 监听来自 popup.js 的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "updateProxy") {
     console.log('Received updateProxy message');
-    updateProxySettings();
+    updateProxySettings().then(() => sendResponse({ success: true })).catch((error) => sendResponse({ success: false, error }));
+    return true; // 保持消息通道打开以支持异步响应
   }
 });
 
